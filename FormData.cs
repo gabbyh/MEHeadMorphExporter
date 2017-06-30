@@ -26,6 +26,7 @@ namespace MEMeshMorphExporter
             }
             var Pcc = MEPackageHandler.OpenMEPackage(pcc);
 
+            /*
             ME3Package me3Pcc = Pcc as ME3Package;
 
             if (me3Pcc == null)
@@ -33,6 +34,7 @@ namespace MEMeshMorphExporter
                 // supports only ME3 for the time being
                 throw new ArgumentException("This is not a ME3 package. The tool only supports ME3 at this time.");
             }
+             * */
             
             PccTreeNode pccRootNode = null;
 
@@ -66,7 +68,8 @@ namespace MEMeshMorphExporter
                 foreach (int meshIndex in MeshExpIndexes)
                 {
                     IExportEntry exp = Pcc.Exports[meshIndex];
-                    SkeletalMesh skMesh = new SkeletalMesh((ME3Package)Pcc, meshIndex);
+                    //SkeletalMesh skMesh = new SkeletalMesh((ME3Package)Pcc, meshIndex);
+                    var skMesh = new Unreal.MESkeletalMesh(Pcc, meshIndex);
                     MeshTreeNode meshNode = new MeshTreeNode(skMesh, exp);
                     ParentMeshNode.Nodes.Add(meshNode);
                 }
@@ -148,9 +151,9 @@ namespace MEMeshMorphExporter
 
     class MeshTreeNode : TreeNode, IDisplayNode
     {
-        public SkeletalMesh mesh;
+        public Unreal.MESkeletalMesh mesh;
 
-        public MeshTreeNode(SkeletalMesh aMesh, IExportEntry exp)
+        public MeshTreeNode(Unreal.MESkeletalMesh aMesh, IExportEntry exp)
         {
             mesh = aMesh;
             Text = exp.ObjectName;

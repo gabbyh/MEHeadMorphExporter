@@ -42,9 +42,9 @@
             this.aSJsonToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.LeftTree = new System.Windows.Forms.TreeView();
-            this.DetailsTreeView = new System.Windows.Forms.TreeView();
             this.LeftTreeContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.exportContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.DetailsTreeView = new System.Windows.Forms.TreeView();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -76,14 +76,14 @@
             // openPccToolStripMenuItem
             // 
             this.openPccToolStripMenuItem.Name = "openPccToolStripMenuItem";
-            this.openPccToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.openPccToolStripMenuItem.Text = "Open Pcc...";
+            this.openPccToolStripMenuItem.Size = new System.Drawing.Size(222, 22);
+            this.openPccToolStripMenuItem.Text = "Open Mass Effect Package...";
             this.openPccToolStripMenuItem.Click += new System.EventHandler(this.openPccToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(222, 22);
             this.exitToolStripMenuItem.Text = "Exit...";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -169,14 +169,6 @@
             this.LeftTree.TabIndex = 0;
             this.LeftTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.LeftTree_AfterSelect);
             // 
-            // DetailsTreeView
-            // 
-            this.DetailsTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.DetailsTreeView.Location = new System.Drawing.Point(0, 0);
-            this.DetailsTreeView.Name = "DetailsTreeView";
-            this.DetailsTreeView.Size = new System.Drawing.Size(338, 366);
-            this.DetailsTreeView.TabIndex = 0;
-            // 
             // LeftTreeContextMenuStrip
             // 
             this.LeftTreeContextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -188,9 +180,17 @@
             // 
             this.exportContextMenuItem.Enabled = false;
             this.exportContextMenuItem.Name = "exportContextMenuItem";
-            this.exportContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.exportContextMenuItem.Size = new System.Drawing.Size(116, 22);
             this.exportContextMenuItem.Text = "Export...";
             this.exportContextMenuItem.Click += new System.EventHandler(this.exportContextMenuItem_Click);
+            // 
+            // DetailsTreeView
+            // 
+            this.DetailsTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.DetailsTreeView.Location = new System.Drawing.Point(0, 0);
+            this.DetailsTreeView.Name = "DetailsTreeView";
+            this.DetailsTreeView.Size = new System.Drawing.Size(338, 366);
+            this.DetailsTreeView.TabIndex = 0;
             // 
             // Form1
             // 

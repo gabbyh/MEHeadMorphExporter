@@ -9,6 +9,8 @@ using ME3Explorer.Unreal;
 
 using ME3Explorer.Unreal.Classes;
 
+using MEMeshMorphExporter.Unreal;
+
 using FBXWrapper;
 
 namespace MEMeshMorphExporter.Exporters
@@ -39,7 +41,7 @@ namespace MEMeshMorphExporter.Exporters
                 foreach (int meshIndex in meshExpIndexes)
                 {
                     IExportEntry meshExp = Pcc.Exports[meshIndex];
-                    SkeletalMesh skMesh = new SkeletalMesh((ME3Package)Pcc, meshIndex);
+                    MESkeletalMesh skMesh = new MESkeletalMesh(Pcc, meshIndex);
                                
                     string fileDest = System.IO.Path.Combine(targetDir, meshExp.ObjectName + ".fbx");
                     ExportSkeletalMeshToFbx(skMesh, meshExp.ObjectName, fileDest);
@@ -86,7 +88,7 @@ namespace MEMeshMorphExporter.Exporters
             }
         }
 
-        public void ExportSkeletalMeshToFbx(SkeletalMesh mesh, string meshName, string targetdir)
+        public void ExportSkeletalMeshToFbx(MESkeletalMesh mesh, string meshName, string targetdir)
         {
             FBXManager lSdkManager = new FBXManager();
             FBXScene lScene = new FBXScene();
@@ -116,7 +118,7 @@ namespace MEMeshMorphExporter.Exporters
             FBXScene lScene = new FBXScene();
             FBXHelper.InitializeSdkObjects(lSdkManager, lScene);
             FBXNode SceneRoot = lScene.GetRootNode();
-            SkeletalMesh mesh = morph.Apply();
+            MESkeletalMesh mesh = morph.Apply();
             FBXNode fbxMesh = CreateFbxMesh(mesh, morph.Name, lScene);
             SceneRoot.AddChild(fbxMesh);
             if (mesh.Bones != null)
@@ -144,9 +146,9 @@ namespace MEMeshMorphExporter.Exporters
             }
         }
 
-        private FBXNode CreateFbxMesh(SkeletalMesh mesh, string mname, FBXScene pScene, float exportScale = 1.0f)
+        private FBXNode CreateFbxMesh(MESkeletalMesh mesh, string mname, FBXScene pScene, float exportScale = 1.0f)
         {
-            SkeletalMesh.LODModelStruct lod = mesh.LODModels[0];
+            MESkeletalMesh.LODModelStruct lod = mesh.LODModels[0];
             FBXMesh fbxMesh = FBXMesh.Create(pScene, mname);
             FBXNode lMeshNode = FBXNode.Create(pScene, mname);
             lMeshNode.SetNodeAttribute(fbxMesh);
@@ -181,7 +183,7 @@ namespace MEMeshMorphExporter.Exporters
                     var sectionVerts = GetSectionVertices(mesh, 0, s);
                     if (sectionVerts.Contains(j))
                     {
-                        FBXVector4 texCoords = new FBXVector4(HalfToFloat(vertex.U), 1 - HalfToFloat(vertex.V), 0, 0);
+                        FBXVector4 texCoords = new FBXVector4(vertex.U, 1 - vertex.V, 0, 0);
                         UVs[s].Add(texCoords);
                     }
                     else
@@ -215,7 +217,7 @@ namespace MEMeshMorphExporter.Exporters
             return lMeshNode;
         }
 
-        private FBXNode CreateFbxSkeleton(List<SkeletalMesh.BoneStruct> Bones, FBXScene pScene)
+        private FBXNode CreateFbxSkeleton(List<MESkeletalMesh.BoneStruct> Bones, FBXScene pScene)
         {
             FBXSkeleton lSkeletonRootAttribute = FBXSkeleton.Create(pScene, "Skeleton");
             lSkeletonRootAttribute.SetSkeletonType(FBXWrapper.SkelType.eRoot);
@@ -227,9 +229,9 @@ namespace MEMeshMorphExporter.Exporters
             return lSkeletonRoot;
         }
 
-        private FBXNode CreateFbxBone(int boneIndex, List<SkeletalMesh.BoneStruct> Skeleton, FBXScene pScene, FBXNode parent)
+        private FBXNode CreateFbxBone(int boneIndex, List<MESkeletalMesh.BoneStruct> Skeleton, FBXScene pScene, FBXNode parent)
         {
-            SkeletalMesh.BoneStruct bone = Skeleton[boneIndex];
+            MESkeletalMesh.BoneStruct bone = Skeleton[boneIndex];
             string boneName = Pcc.isName(bone.Name) ? Pcc.Names[bone.Name] : "bone_" + bone.Name;
             FBXSkeleton lSkeletonLimbNodeAttribute1 = FBXSkeleton.Create(pScene, boneName);
             lSkeletonLimbNodeAttribute1.SetSkeletonType(FBXWrapper.SkelType.eLimbNode);
@@ -251,7 +253,7 @@ namespace MEMeshMorphExporter.Exporters
             Rotator rot = QuatToRotator(boneQuad);
             lSkeletonLimbNode1.LclRotation = new List<double> { rot.Roll, rot.Pitch, rot.Yaw };
 
-            List<SkeletalMesh.BoneStruct> children = Skeleton.Where(b => b.Parent == boneIndex).ToList();
+            var children = Skeleton.Where(b => b.Parent == boneIndex).ToList();
 
             foreach (var childBone in children)
             {
@@ -293,13 +295,13 @@ namespace MEMeshMorphExporter.Exporters
         }
 
         // SkeletalMesh
-        private void CreateMeshSkinning(SkeletalMesh mesh, int lod, FBXNode pFbxMesh, FBXNode pSkeletonRoot, FBXScene pScene)
+        private void CreateMeshSkinning(MESkeletalMesh mesh, int lod, FBXNode pFbxMesh, FBXNode pSkeletonRoot, FBXScene pScene)
         {
             var vg = GetVertexGroups(mesh, lod);
             CreateMeshSkinning(vg, pFbxMesh, pSkeletonRoot, pScene);
         }
 
-        private Dictionary<string, List<VertexWeight>> GetVertexGroups(SkeletalMesh mesh, int lodIndex=0)
+        private Dictionary<string, List<VertexWeight>> GetVertexGroups(MESkeletalMesh mesh, int lodIndex=0)
         {
             Dictionary<string, List<VertexWeight>> VertexGroups = new Dictionary<string, List<VertexWeight>>();
             var lod = mesh.LODModels[lodIndex];
@@ -432,12 +434,12 @@ namespace MEMeshMorphExporter.Exporters
             return Result;
         }
 
-        string GetBoneName(int bone, SkeletalMesh mesh)
+        string GetBoneName(int bone, MESkeletalMesh mesh)
         {
             return Pcc.isName(mesh.Bones[bone].Name) ? Pcc.Names[mesh.Bones[bone].Name] : "bone_" + mesh.Bones[bone].Name;              
         }
 
-        private List<int> GetSectionVertices(SkeletalMesh mesh, int lod, int section)
+        private List<int> GetSectionVertices(MESkeletalMesh mesh, int lod, int section)
         {
             var vertices = new HashSet<int>();
             var cLOD = mesh.LODModels[lod];
@@ -449,11 +451,22 @@ namespace MEMeshMorphExporter.Exporters
             return vertices.ToList();
         }
 
-        private string GetMatName(SkeletalMesh mesh, SkeletalMesh.LODModelStruct lod, int s)
+        private string GetMatName(MESkeletalMesh mesh, MESkeletalMesh.LODModelStruct lod, int s)
         {
             if (lod.Sections[s].MaterialIndex < mesh.Materials.Count)
             {
-                return Pcc.isExport(mesh.Materials[lod.Sections[s].MaterialIndex] - 1) ? Pcc.Exports[mesh.Materials[lod.Sections[s].MaterialIndex] - 1].ObjectName : "mat_" + s;
+                if (Pcc.isExport(mesh.Materials[lod.Sections[s].MaterialIndex] - 1)) 
+                {
+                    return Pcc.Exports[mesh.Materials[lod.Sections[s].MaterialIndex] - 1].ObjectName;
+                }
+                else if (Pcc.isImport(-mesh.Materials[lod.Sections[s].MaterialIndex] - 1)) 
+                {
+                    return Pcc.Imports[-mesh.Materials[lod.Sections[s].MaterialIndex] -1].ObjectName;
+                }
+                else
+                {
+                    return "mat_" + s; 
+                }
             }
             else
             {
@@ -462,21 +475,9 @@ namespace MEMeshMorphExporter.Exporters
 
         }
 
-        private float HalfToFloat(UInt16 val)
-        {
-
-            UInt16 u = val;
-            int sign = (u >> 15) & 0x00000001;
-            int exp = (u >> 10) & 0x0000001F;
-            int mant = u & 0x000003FF;
-            exp = exp + (127 - 15);
-            int i = (sign << 31) | (exp << 23) | (mant << 13);
-            byte[] buff = BitConverter.GetBytes(i);
-            return BitConverter.ToSingle(buff, 0);
-        }
-
+        // TODO
         // NumTriangles is read as an int in SkeletalMesh class whereas it's a short, resulting in errors for some meshes.
-        private short GetFixedNumberOfTriangles(ME3Explorer.Unreal.Classes.SkeletalMesh.SectionStruct section)
+        private short GetFixedNumberOfTriangles(MESkeletalMesh.SectionStruct section)
         {
             var byteArray = BitConverter.GetBytes(section.NumTriangles);
             short nt = BitConverter.ToInt16(byteArray, 0);

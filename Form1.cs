@@ -28,18 +28,20 @@ namespace MEMeshMorphExporter
         private void openPccToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog opf = new OpenFileDialog();
-            opf.Title = "Select pcc on disk";
-            opf.Filter = "*.pcc|*.pcc";
+            opf.Title = "Select game package on disk";
+            opf.Filter = "Mass Effect Package|*.pcc;*.sfm;*.upk";
 
             if (opf.ShowDialog() == DialogResult.OK)
             {
                 string pccPath = opf.FileName;
                 try
                 {
+                    this.Cursor = Cursors.WaitCursor;
                     TreeNode node = data.BuildPccTree(pccPath);
                     if (node != null)
                     {
                         LeftTree.Nodes.Add(node);
+                        LeftTree.Refresh();
                     }
                     else
                     {
@@ -50,7 +52,10 @@ namespace MEMeshMorphExporter
                 {
                     MessageBox.Show(ex.Message);
                 }
-                              
+                finally
+                {
+                    this.Cursor = Cursors.Default;    
+                }                        
             }
         }
 
@@ -67,9 +72,9 @@ namespace MEMeshMorphExporter
                 sfd.FileName = meshNode.Text + ".fbx";
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
-                    Cursor.Current = Cursors.WaitCursor;
+                    this.Cursor = Cursors.WaitCursor;
                     exporter.ExportSkeletalMeshToFbx(meshNode.mesh, meshNode.Text, sfd.FileName);
-                    Cursor.Current = Cursors.Default;
+                    this.Cursor = Cursors.Default;
                     MessageBox.Show("Done.");
                 }
             }          
@@ -133,7 +138,7 @@ namespace MEMeshMorphExporter
                 sfd.FileName = morphNode.Text + ".fbx";
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
-                    Cursor.Current = Cursors.WaitCursor;
+                    this.Cursor = Cursors.WaitCursor;
                     string ext = System.IO.Path.GetExtension(sfd.FileName);
                     if (ext.EndsWith("fbx"))
                     {
@@ -144,7 +149,7 @@ namespace MEMeshMorphExporter
                     {
                         morphNode.morph.ExportToJson(sfd.FileName);
                     }
-                    Cursor.Current = Cursors.Default;
+                    this.Cursor = Cursors.Default;
                     MessageBox.Show("Done.");
                 }
             }
@@ -159,10 +164,10 @@ namespace MEMeshMorphExporter
                 fbd.Description = "Select folder where to save the meshes";
                 if (fbd.ShowDialog() == DialogResult.OK)
                 {
-                    Cursor.Current = Cursors.WaitCursor;
+                    this.Cursor = Cursors.WaitCursor;
                     var exporter = new MEMeshMorphExporter.Exporters.MeshExporter(pccNode.pcc);
                     exporter.ExportMeshesToFbx(fbd.SelectedPath);
-                    Cursor.Current = Cursors.Default;
+                    this.Cursor = Cursors.Default;
                     MessageBox.Show("Done.");
                 }
             }
@@ -178,10 +183,10 @@ namespace MEMeshMorphExporter
                 fbd.Description = "Select folder where to save the morphs";
                 if (fbd.ShowDialog() == DialogResult.OK)
                 {
-                    Cursor.Current = Cursors.WaitCursor;
+                    this.Cursor = Cursors.WaitCursor;
                     var exporter = new MEMeshMorphExporter.Exporters.MeshExporter(pccNode.pcc);
                     exporter.ExportMorphsToFbx(fbd.SelectedPath);
-                    Cursor.Current = Cursors.Default;
+                    this.Cursor = Cursors.Default;
                     MessageBox.Show("Done.");
                 }
             }
@@ -197,10 +202,10 @@ namespace MEMeshMorphExporter
                 fbd.Description = "Select folder where to save the morphs";
                 if (fbd.ShowDialog() == DialogResult.OK)
                 {
-                    Cursor.Current = Cursors.WaitCursor;
+                    this.Cursor = Cursors.WaitCursor;
                     var exporter = new MEMeshMorphExporter.Exporters.MeshExporter(pccNode.pcc);
                     exporter.ExportMorphsToJson(fbd.SelectedPath);
-                    Cursor.Current = Cursors.Default;
+                    this.Cursor = Cursors.Default;
                     MessageBox.Show("Done.");
                 }
             }

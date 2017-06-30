@@ -3,6 +3,12 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# added by me
+Visual Studio 2013/
+visual studio 2013Templates/
+
+
+
 # User-specific files
 *.suo
 *.user

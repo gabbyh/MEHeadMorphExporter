@@ -53,15 +53,15 @@ namespace MEMeshMorphExporter.Unreal
         #endregion
 
         MaterialOverrides m_oMaterialOverrides;
-        SkeletalMesh m_oBaseHead;
-        SkeletalMesh m_oHairMesh;
+        MESkeletalMesh m_oBaseHead;
+        MESkeletalMesh m_oHairMesh;
         List<BioFeature> m_aMorphFeatures = new List<BioFeature>();
         List<BoneOffset> m_aFinalSkeleton = new List<BoneOffset>();
 
-        List<List<Vector3>> Vertices = new List<List<Vector3>>();
-        List<Vector3> Lod0Vertices = new List<Vector3>();
-        List<Vector3> Lod1Vertices = new List<Vector3>();
-        List<Vector3> Lod2Vertices = new List<Vector3>();
+        List<List<Vector>> Vertices = new List<List<Vector>>();
+        List<Vector> Lod0Vertices = new List<Vector>();
+        List<Vector> Lod1Vertices = new List<Vector>();
+        List<Vector> Lod2Vertices = new List<Vector>();
 
 
         public BioMorphFace(IMEPackage Pcc, int Index) : base (Pcc, Index)
@@ -88,14 +88,14 @@ namespace MEMeshMorphExporter.Unreal
                             int objIndex = prop.Value.IntValue;
                             if (pcc.isExport(objIndex - 1))
                             {
-                                m_oBaseHead = new ME3Explorer.Unreal.Classes.SkeletalMesh((ME3Package) pcc, objIndex - 1);
+                                m_oBaseHead = new MESkeletalMesh(pcc, objIndex - 1);
                             }
                             break;
                         case "m_oHairMesh":
                             int objHairIndex = prop.Value.IntValue;
                             if (pcc.isExport(objHairIndex - 1))
                             {
-                                m_oHairMesh = new ME3Explorer.Unreal.Classes.SkeletalMesh((ME3Package)pcc, objHairIndex - 1);
+                                m_oHairMesh = new MESkeletalMesh(pcc, objHairIndex - 1);
                             }
                             break;
                         case "m_nInternalMorphFaceContentVersion":
@@ -122,10 +122,11 @@ namespace MEMeshMorphExporter.Unreal
             }
         }
 
-        public ME3Explorer.Unreal.Classes.SkeletalMesh Apply()
+        public MESkeletalMesh Apply()
         {
             // apply vertices morph first
-            for (int lod = 0; lod < 3; lod++)
+            // in skeletalMesh, we load only LOD0, so we only apply for lod0
+            for (int lod = 0; lod < 1; lod++)
             {
                 for (int v=0; v < m_oBaseHead.LODModels[lod].VertexBufferGPUSkin.Vertices.Count; v++) 
                 {
@@ -141,7 +142,7 @@ namespace MEMeshMorphExporter.Unreal
             return m_oBaseHead;
         }
 
-        private ME3Explorer.Unreal.Classes.SkeletalMesh.BoneStruct SearchBoneByName(string name)
+        private MESkeletalMesh.BoneStruct SearchBoneByName(string name)
         {
             foreach (var b in m_oBaseHead.Bones)
             {
@@ -151,7 +152,7 @@ namespace MEMeshMorphExporter.Unreal
                     return b;
                 }
             }
-            ME3Explorer.Unreal.Classes.SkeletalMesh.BoneStruct empty = new ME3Explorer.Unreal.Classes.SkeletalMesh.BoneStruct();
+            MESkeletalMesh.BoneStruct empty = new MESkeletalMesh.BoneStruct();
             empty.Name = -1;
             return empty;
         }
@@ -196,7 +197,7 @@ namespace MEMeshMorphExporter.Unreal
                 for (int i = 0; i < count; i++)
                 {
                     // read Vector
-                    Vector3 vert = ReadVert(pcc.Exports[MyIndex].Data, dataIndex);
+                    Vector vert = ReadVert(pcc.Exports[MyIndex].Data, dataIndex);
                     Lod0Vertices.Add(vert);
                     dataIndex = dataIndex + 12;
                 }
@@ -210,7 +211,7 @@ namespace MEMeshMorphExporter.Unreal
                     for (int i = 0; i < count; i++)
                     {
                         // read Vector
-                        Vector3 vert = ReadVert(pcc.Exports[MyIndex].Data, dataIndex);
+                        Vector vert = ReadVert(pcc.Exports[MyIndex].Data, dataIndex);
                         Lod1Vertices.Add(vert);
                         dataIndex = dataIndex + 12;
                     }
@@ -224,7 +225,7 @@ namespace MEMeshMorphExporter.Unreal
                         for (int i = 0; i < count; i++)
                         {
                             // read Vector
-                            Vector3 vert = ReadVert(pcc.Exports[MyIndex].Data, dataIndex);
+                            Vector vert = ReadVert(pcc.Exports[MyIndex].Data, dataIndex);
                             Lod2Vertices.Add(vert);
                             dataIndex = dataIndex + 12;
                         }
@@ -234,9 +235,9 @@ namespace MEMeshMorphExporter.Unreal
             }           
         }
 
-        private Vector3 ReadVert(byte[] bytes, int start)
+        private Vector ReadVert(byte[] bytes, int start)
         {
-            Vector3 vert = new Vector3();
+            Vector vert = new Vector();
             vert.X = BitConverter.ToSingle(pcc.Exports[MyIndex].Data, start);
             vert.Y = BitConverter.ToSingle(pcc.Exports[MyIndex].Data, start + 4);
             vert.Z = BitConverter.ToSingle(pcc.Exports[MyIndex].Data, start + 8);
@@ -292,7 +293,7 @@ namespace MEMeshMorphExporter.Unreal
                 }
             }
             lines.Add("[Lod0Verts]");
-            foreach (Vector3 lod0Vert in Lod0Vertices)
+            foreach (Vector lod0Vert in Lod0Vertices)
             {
                 lines.Add(lod0Vert.X + ";" + lod0Vert.Y + ";" + lod0Vert.Z);
             }
@@ -351,7 +352,7 @@ namespace MEMeshMorphExporter.Unreal
     public class BoneOffset
     {
         public string BoneName = "";
-        public Vector3 Offset;
+        public Vector Offset;
 
         public BoneOffset(List<PropertyReader.Property> props, IMEPackage pcc)
         {
@@ -368,7 +369,7 @@ namespace MEMeshMorphExporter.Unreal
                         }
                         break;
                     case "vPos":                 
-                        Offset = new Vector3(BitConverter.ToSingle(p.raw, p.raw.Length - 12),
+                        Offset = new Vector(BitConverter.ToSingle(p.raw, p.raw.Length - 12),
                                               BitConverter.ToSingle(p.raw, p.raw.Length - 8),
                                               BitConverter.ToSingle(p.raw, p.raw.Length - 4));
                         break;
@@ -573,13 +574,13 @@ namespace MEMeshMorphExporter.Unreal
         }
     }
 
-    public struct Vector3
+    public struct Vector
     {
         public float X;
         public float Y;
         public float Z;
 
-        public Vector3(float x, float y, float z)
+        public Vector(float x, float y, float z)
         {
             X = x;
             Y = y;
