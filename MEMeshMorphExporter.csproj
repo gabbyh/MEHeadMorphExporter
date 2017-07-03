@@ -91,7 +91,6 @@
     <Compile Include="Model\JsonToTreeUtils.cs" />
     <Compile Include="Model\Unreal\Classes\BaseUnrealObject.cs" />
     <Compile Include="Model\Unreal\Classes\BioMorphFace.cs" />
-    <Compile Include="Model\Unreal\Classes\ExtendedSkeletalMesh.cs" />
     <Compile Include="Model\Unreal\Classes\MESkeletalMesh.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -202,8 +202,7 @@ namespace MEMeshMorphExporter.Exporters
                 string matName = GetMatName(mesh, lod, s);
                 lMeshNode.AddMaterial(pScene, matName);
                 // faces
-                int FixedNumberOfTriangles = (int)GetFixedNumberOfTriangles(lod.Sections[s]);
-                for (int j = 0 ; j < FixedNumberOfTriangles; j++)
+                for (int j = 0 ; j < lod.Sections[s].NumTriangles; j++)
                 {
                     
                     int baseI = lod.Sections[s].BaseIndex;
@@ -443,8 +442,7 @@ namespace MEMeshMorphExporter.Exporters
         {
             var vertices = new HashSet<int>();
             var cLOD = mesh.LODModels[lod];
-            int FixedNumberOfTriangles = (int)GetFixedNumberOfTriangles(cLOD.Sections[section]);
-            for (int i = 0; i < FixedNumberOfTriangles * 3; i++)
+            for (int i = 0; i < cLOD.Sections[section].NumTriangles * 3; i++)
             {
                 vertices.Add(cLOD.IndexBuffer.Indexes[(int)cLOD.Sections[section].BaseIndex + i]);
             }
@@ -474,15 +472,5 @@ namespace MEMeshMorphExporter.Exporters
             }
 
         }
-
-        // TODO
-        // NumTriangles is read as an int in SkeletalMesh class whereas it's a short, resulting in errors for some meshes.
-        private short GetFixedNumberOfTriangles(MESkeletalMesh.SectionStruct section)
-        {
-            var byteArray = BitConverter.GetBytes(section.NumTriangles);
-            short nt = BitConverter.ToInt16(byteArray, 0);
-            return nt;
-        }
-
     }
 }

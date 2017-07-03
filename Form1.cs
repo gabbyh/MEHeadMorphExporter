@@ -164,10 +164,10 @@ namespace MEMeshMorphExporter
                 fbd.Description = "Select folder where to save the meshes";
                 if (fbd.ShowDialog() == DialogResult.OK)
                 {
-                    this.Cursor = Cursors.WaitCursor;
+                    Cursor.Current = Cursors.WaitCursor;
                     var exporter = new MEMeshMorphExporter.Exporters.MeshExporter(pccNode.pcc);
                     exporter.ExportMeshesToFbx(fbd.SelectedPath);
-                    this.Cursor = Cursors.Default;
+                    Cursor.Current = Cursors.Default;
                     MessageBox.Show("Done.");
                 }
             }
@@ -183,10 +183,10 @@ namespace MEMeshMorphExporter
                 fbd.Description = "Select folder where to save the morphs";
                 if (fbd.ShowDialog() == DialogResult.OK)
                 {
-                    this.Cursor = Cursors.WaitCursor;
+                    Cursor.Current = Cursors.WaitCursor;
                     var exporter = new MEMeshMorphExporter.Exporters.MeshExporter(pccNode.pcc);
                     exporter.ExportMorphsToFbx(fbd.SelectedPath);
-                    this.Cursor = Cursors.Default;
+                    Cursor.Current = Cursors.Default;
                     MessageBox.Show("Done.");
                 }
             }

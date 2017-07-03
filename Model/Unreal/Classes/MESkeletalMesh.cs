@@ -59,7 +59,6 @@ namespace MEMeshMorphExporter.Unreal
                     short s = 0;
                     s = Container + s;
                 }                
-                //TriangleSorting = Container + TriangleSorting;
             }
 
             public TreeNode ToTree(int MyIndex)
@@ -68,24 +67,19 @@ namespace MEMeshMorphExporter.Unreal
                 res.Nodes.Add("Material Index : " + MaterialIndex);
                 res.Nodes.Add("Chunk Index : " + ChunkIndex);
                 res.Nodes.Add("Base Index : " + BaseIndex);
-                res.Nodes.Add("Num Triangles : " + NumTriangles);
-                //res.Nodes.Add("Triangle Sorting : " + TriangleSorting);                
+                res.Nodes.Add("Num Triangles : " + NumTriangles);            
                 return res;
             }
         }
 
         public struct MultiSizeIndexContainerStruct
         {
-            //public int NeedsCPUAccess;
-            //public byte DataTypeSize;
             public int IndexSize;
             public int IndexCount;
             public List<ushort> Indexes;
 
             public void Serialize(SerializingContainer Container)
             {
-                //NeedsCPUAccess = Container + NeedsCPUAccess;
-                //DataTypeSize = Container + DataTypeSize;
                 IndexSize = Container + IndexSize;
                 IndexCount = Container + IndexCount;
                 if (Container.isLoading)
@@ -101,8 +95,6 @@ namespace MEMeshMorphExporter.Unreal
             public TreeNode ToTree()
             {
                 TreeNode res = new TreeNode("MultiSizeIndexContainer");
-                //res.Nodes.Add("NeedsCPUAccess : " + NeedsCPUAccess);
-                //res.Nodes.Add("DataTypeSize : " + DataTypeSize);
                 res.Nodes.Add("IndexSize : " + IndexSize);
                 res.Nodes.Add("IndexCount : " + IndexCount);
                 TreeNode t = new TreeNode("Indexes");
@@ -316,6 +308,9 @@ namespace MEMeshMorphExporter.Unreal
             public Vector3 Position;
             public float U;
             public float V;
+
+            float[] Normals;
+            float[] Tangents;
             public void Serialize(SerializingContainer Container, MEVersion version)
             {
                 if (version == MEVersion.ME2)
@@ -348,33 +343,25 @@ namespace MEMeshMorphExporter.Unreal
                 sV = Container + sV;
                 U = HalfToFloat(sU);
                 V = HalfToFloat(sV);
+
+                Normals = UnpackNormal(TangentZ);
+                Tangents = UnpackNormal(TangentX);
             }
-            public void SerializeME1(SerializingContainer Container)
+
+            public GPUSkinVertexStruct(SoftSkinVertexStruct sv)
             {
-                long strPos = Container.Memory.Position;
-                Position.X = Container + Position.X;
-                Position.Y = Container + Position.Y;
-                Position.Z = Container + Position.Z;
-                TangentX = Container + TangentX;
-                TangentZ = Container + TangentZ;
-
-                // UV are at init pos + 24?
-                Container.Memory.Position = strPos + 24;
-                U = Container + U;
-                V = Container + V;
-
-                // bones starts at initposition + 32
-                if (Container.isLoading)
-                {
-                    InfluenceBones = new byte[4];
-                    InfluenceWeights = new byte[4];
-                }
-                Container.Memory.Position = strPos + 32;
-                for (int i = 0; i < 4; i++)
-                    InfluenceBones[i] = Container + InfluenceBones[i];
-                for (int i = 0; i < 4; i++)
-                    InfluenceWeights[i] = Container + InfluenceWeights[i];                
+                InfluenceBones = sv.InfluenceBones;
+                InfluenceWeights = sv.InfluenceWeights;
+                Position = sv.Position;
+                TangentX = sv.TangentX;
+                TangentY = sv.TangentY;
+                TangentZ = sv.TangentZ;
+                U = sv.UV[0].X;
+                V = sv.UV[0].Y;
+                Normals = new float[3];
+                Tangents = new float[3];
             }
+            
             public TreeNode ToTree(int MyIndex)
             {
                 string s = MyIndex + " : TanX : 0x" + TangentX.ToString("X8") + " ";
@@ -384,6 +371,9 @@ namespace MEMeshMorphExporter.Unreal
                 for (int i = 0; i < 4; i++)
                     s += "(B:0x" + InfluenceBones[i].ToString("X2") + " W:" + InfluenceWeights[i].ToString("X2") + ")";
                 s += "] UV : U(" + U + ") V(" + V + ") ";
+                s += "Normals  : (" + Normals[0].ToString() + ", " + Normals[1].ToString() + ", " + Normals[2].ToString() + ")";
+                s += "Tangents  : (" + Tangents[0].ToString() + ", " + Tangents[1].ToString() + ", " + Tangents[2].ToString() + ")";
+                
                 TreeNode res = new TreeNode(s);
                 return res;
             }
@@ -399,6 +389,17 @@ namespace MEMeshMorphExporter.Unreal
                 int i = (sign << 31) | (exp << 23) | (mant << 13);
                 byte[] buff = BitConverter.GetBytes(i);
                 return BitConverter.ToSingle(buff, 0);
+            }
+
+            private float[] UnpackNormal(int ToDecode)
+            {
+                ToDecode = (int)(ToDecode ^ 0x80808080);		// offset by 128
+                float[] result = new float[3];
+                result[0] = (sbyte)(ToDecode & 0xFF) / 127.0f;
+                result[1] = (sbyte)((ToDecode >> 8) & 0xFF) / 127.0f;
+                result[2] = (sbyte)((ToDecode >> 16) & 0xFF) / 127.0f;
+
+                return result;
             }
         }
 
@@ -419,40 +420,23 @@ namespace MEMeshMorphExporter.Unreal
 
                 if (version == MEVersion.ME1)
                 {
-                    //NumTexCoords
+                    //VertexSize
                     VertexSize = Container + VertexSize;
-                    
-                    List<SoftSkinVertexStruct> softVerts = new List<SoftSkinVertexStruct>();
+
+                    Vertices = new List<GPUSkinVertexStruct>();
                     int VertsCount = 0;
                     VertsCount = Container + VertsCount;
                     for (int i = 0; i < VertsCount; i++)
                     {
                         var aSoftVert = new SoftSkinVertexStruct();
                         aSoftVert.Serialize(Container);
-                        softVerts.Add(aSoftVert);
+                        GPUSkinVertexStruct gpuv = new GPUSkinVertexStruct(aSoftVert);
+                        Vertices.Add(gpuv);
                     }
-                    // TODO optimize and do in one loop instead of 2
-                    List<GPUSkinVertexStruct> VerticesTmp = new List<GPUSkinVertexStruct>();
-                    softVerts.ForEach(sv =>
-                    {
-                        GPUSkinVertexStruct gpuv = new GPUSkinVertexStruct();
-                        gpuv.InfluenceBones = sv.InfluenceBones;
-                        gpuv.InfluenceWeights = sv.InfluenceWeights;
-                        gpuv.Position = sv.Position;
-                        gpuv.TangentX = sv.TangentX;
-                        gpuv.TangentY = sv.TangentY;
-                        gpuv.TangentZ = sv.TangentZ;
-                        gpuv.U = sv.UV[0].X;
-                        gpuv.V = sv.UV[0].Y;
-                        VerticesTmp.Add(gpuv);
-                    });
-                    Vertices = new List<GPUSkinVertexStruct>();
-                    Vertices.AddRange(VerticesTmp);
                     UseFullPrecisionUVs = 1;
                     return;
                 }
 
-                //NumTexCoords = Container + NumTexCoords;
                 ////UseFullPrecisionUVs
                 UseFullPrecisionUVs = Container + UseFullPrecisionUVs;
                 if (version == MEVersion.ME3)
@@ -497,28 +481,6 @@ namespace MEMeshMorphExporter.Unreal
                 }
             }
 
-            public void SerializeME1(SerializingContainer Container)
-            {
-                int count = 0;
-                if (!Container.isLoading)
-                    count = Vertices.Count();
-                count = Container + count;
-
-                if (Container.isLoading)
-                {
-                    Vertices = new List<GPUSkinVertexStruct>();
-                    for (int i = 0; i < count; i++)
-                        Vertices.Add(new GPUSkinVertexStruct());
-                }
-
-                for (int i = 0; i < count; i++)
-                {
-                    GPUSkinVertexStruct v = Vertices[i];
-                    v.SerializeME1(Container);
-                    Vertices[i] = v;
-                }
-            }
-
             public TreeNode ToTree()
             {
                 TreeNode res = new TreeNode("VertexBufferGPUSkin");
@@ -553,7 +515,7 @@ namespace MEMeshMorphExporter.Unreal
             public int RawPointIndicesCount;
             public int RawPointIndicesSize;
             public int RawPointIndicesOffset;
-            public List<int> RawPointIndices;
+            public List<ushort> RawPointIndices;
             public int NumTexCoords;
             public VertexBufferGPUSkinStruct VertexBufferGPUSkin;
             public int Unk4;
@@ -583,7 +545,7 @@ namespace MEMeshMorphExporter.Unreal
                 IndexBuffer.Serialize(Container);
                 //unk1
                 Unk1 = Container + Unk1;
-                if (version == MEVersion.ME2)
+                if (Unk1 > 0)
                 {
                     ushort[] indices = new ushort[Unk1];
                     for (int i = 0; i < Unk1; i++)
@@ -663,30 +625,23 @@ namespace MEMeshMorphExporter.Unreal
                 RawPointIndicesFlag = Container + RawPointIndicesFlag;                               
                 //RawPointIndicesCount
                 RawPointIndicesCount = Container + RawPointIndicesCount;
+                RawPointIndices = new List<ushort>();
                 if (RawPointIndicesCount > 0)
                 {
-                    ushort[] bulk = new ushort[RawPointIndicesCount];
-                    for (int i = 0; i < RawPointIndicesCount; i++)
+                    //RawPointIndices
+                    if (Container.isLoading)
                     {
-                        bulk[i] = Container + bulk[i];
+                        for (int i = 0; i < RawPointIndicesCount; i++)
+                            RawPointIndices.Add(0);
                     }
+                    for (int i = 0; i < RawPointIndicesCount; i++)
+                        RawPointIndices[i] = Container + RawPointIndices[i];
                 }
                 //RawPointIndicesSize
                 RawPointIndicesSize = Container + RawPointIndicesSize;                
                 //RawPointIndicesOffset
                 RawPointIndicesOffset = Container + RawPointIndicesOffset;
-                
-                //RawPointIndices
-                if (Container.isLoading)
-                {
-                    RawPointIndices = new List<int>();
-                    for (int i = 0; i < RawPointIndicesCount; i++)
-                        RawPointIndices.Add(0);
-                }
-                /*
-                for (int i = 0; i < RawPointIndicesCount; i++)
-                    RawPointIndices[i] = Container + RawPointIndices[i];
-                */
+               
                 //VertexBufferGPUSkin
                 if (Container.isLoading)
                     VertexBufferGPUSkin = new VertexBufferGPUSkinStruct();
