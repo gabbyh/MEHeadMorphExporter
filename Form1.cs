@@ -233,5 +233,12 @@ namespace MEMeshMorphExporter
                 }
             }
         }
+
+        private void clearTreeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Cursor.Current = Cursors.WaitCursor;
+            LeftTree.Nodes.Clear();
+            Cursor.Current = Cursors.Default;
+        }
     }
 }

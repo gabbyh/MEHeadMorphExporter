@@ -45,6 +45,7 @@
             this.LeftTreeContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.exportContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.DetailsTreeView = new System.Windows.Forms.TreeView();
+            this.clearTreeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -68,6 +69,7 @@
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openPccToolStripMenuItem,
+            this.clearTreeToolStripMenuItem,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
@@ -192,6 +194,13 @@
             this.DetailsTreeView.Size = new System.Drawing.Size(338, 366);
             this.DetailsTreeView.TabIndex = 0;
             // 
+            // clearTreeToolStripMenuItem
+            // 
+            this.clearTreeToolStripMenuItem.Name = "clearTreeToolStripMenuItem";
+            this.clearTreeToolStripMenuItem.Size = new System.Drawing.Size(222, 22);
+            this.clearTreeToolStripMenuItem.Text = "Clear Tree...";
+            this.clearTreeToolStripMenuItem.Click += new System.EventHandler(this.clearTreeToolStripMenuItem_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -232,6 +241,7 @@
         private System.Windows.Forms.ToolStripMenuItem aSJsonToolStripMenuItem;
         private System.Windows.Forms.ContextMenuStrip LeftTreeContextMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem exportContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem clearTreeToolStripMenuItem;
     }
 }
 
