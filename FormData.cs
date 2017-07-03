@@ -17,6 +17,8 @@ namespace MEMeshMorphExporter
     {
         private bool _isPackageHandlerInitialized = false;
 
+        private List<PccTreeNode> PccList = new List<PccTreeNode>();
+
         public TreeNode BuildPccTree(string pcc)
         {
             if (!_isPackageHandlerInitialized)
@@ -24,6 +26,15 @@ namespace MEMeshMorphExporter
                 MEPackageHandler.Initialize();
                 _isPackageHandlerInitialized = true; ;
             }
+
+            // check first if this pcc has already been added in the tree
+            bool IsPccAlreadyInTree = PccList.Find(ptn => ptn.pcc.FileName == pcc) != null;
+
+            if (IsPccAlreadyInTree)
+            {
+                return null;
+            }
+
             var Pcc = MEPackageHandler.OpenMEPackage(pcc);
 
             /*
@@ -77,6 +88,9 @@ namespace MEMeshMorphExporter
                 // build hierarchy
                 pccRootNode.Nodes.Add(ParentMeshNode);
                 pccRootNode.Nodes.Add(ParentMorphNode);
+
+                // add in the list
+                PccList.Add(pccRootNode);
             }
             else
             {
@@ -130,6 +144,7 @@ namespace MEMeshMorphExporter
                 TreeView tv = target as TreeView;
                 tv.Nodes.Clear();
                 TreeNode JsonTree = JsonToTree.ToNode(morph);
+                JsonTree.ExpandAll();
                 tv.Nodes.Add(JsonTree);
             }
             catch (Exception e)

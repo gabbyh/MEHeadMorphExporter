@@ -30,22 +30,30 @@ namespace MEMeshMorphExporter
             OpenFileDialog opf = new OpenFileDialog();
             opf.Title = "Select game package on disk";
             opf.Filter = "Mass Effect Package|*.pcc;*.sfm;*.upk";
+            opf.Multiselect = true;
 
             if (opf.ShowDialog() == DialogResult.OK)
             {
-                string pccPath = opf.FileName;
                 try
                 {
+                    int NoMorphPcc = 0;
                     this.Cursor = Cursors.WaitCursor;
-                    TreeNode node = data.BuildPccTree(pccPath);
-                    if (node != null)
+                    foreach (string pccPath in opf.FileNames)
                     {
-                        LeftTree.Nodes.Add(node);
-                        LeftTree.Refresh();
+                        TreeNode node = data.BuildPccTree(pccPath);
+                        if (node != null)
+                        {
+                            LeftTree.Nodes.Add(node);
+                            LeftTree.Refresh();
+                        }
+                        else
+                        {
+                            NoMorphPcc++;
+                        }
                     }
-                    else
+                    if (NoMorphPcc > 0)
                     {
-                        MessageBox.Show("No morph found in this pcc file");
+                        MessageBox.Show("Some pcc files were not added because they do not contain any morph or because they have been already added to the tree before.");
                     }
                 }
                 catch (ArgumentException ex)
