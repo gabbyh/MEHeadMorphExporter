@@ -246,6 +246,7 @@ namespace MEMeshMorphExporter
         {
             Cursor.Current = Cursors.WaitCursor;
             LeftTree.Nodes.Clear();
+            DetailsTreeView.Nodes.Clear();
             Cursor.Current = Cursors.Default;
         }
     }
