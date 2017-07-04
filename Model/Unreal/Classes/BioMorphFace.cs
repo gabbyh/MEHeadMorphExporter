@@ -477,7 +477,7 @@ namespace MEMeshMorphExporter.Unreal
                             }
                             break;
                         case "cValue":
-                            co.Value = new LinearColor(p);
+                            co.Value = new LinearColor(sp);
                             break;
                         case "None":
                             break;
@@ -544,10 +544,10 @@ namespace MEMeshMorphExporter.Unreal
 
     public class LinearColor
     {
-        float R { get; set; }
-        float G { get; set; }
-        float B { get; set; }
-        float A { get; set; }
+        public float R { get; set; }
+        public float G { get; set; }
+        public float B { get; set; }
+        public float A { get; set; }
 
 
         LinearColor White { get { return new LinearColor(1, 1, 1, 1); } }
