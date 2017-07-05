@@ -113,12 +113,15 @@ namespace MEMeshMorphExporter
                         break;
                     case "morph":
                         exportMeshToolStripMenuItem.Enabled = false;
-                        exportMorphToolStripMenuItem.Enabled = true;
                         exportAllPccMeshesToolStripMenuItem.Enabled = false;
                         exportAllPccMorphsToolStripMenuItem.Enabled = false;
-                        LeftTreeContextMenuStrip.Visible = true;
-                        exportContextMenuItem.Visible = true;
-                        exportContextMenuItem.Enabled = true;
+                        if (((MorphTreeNode)nodeToDisplay).morph.IsExportable)
+                        {
+                            LeftTreeContextMenuStrip.Visible = true;
+                            exportContextMenuItem.Visible = true;
+                            exportContextMenuItem.Enabled = true;
+                            exportMorphToolStripMenuItem.Enabled = true;
+                        }                      
                         break;
                     case "mesh":
                         exportMeshToolStripMenuItem.Enabled = true;
@@ -136,7 +139,7 @@ namespace MEMeshMorphExporter
         private void exportMorphToolStripMenuItem_Click(object sender, EventArgs e)
         {
             MorphTreeNode morphNode = LeftTree.SelectedNode as MorphTreeNode;
-            if (morphNode != null)
+            if (morphNode != null && morphNode.morph != null && morphNode.morph.IsExportable)
             {
                 var pccNode = morphNode.GetParentNode();
                 
@@ -160,6 +163,10 @@ namespace MEMeshMorphExporter
                     this.Cursor = Cursors.Default;
                     MessageBox.Show("Done.");
                 }
+            }
+            else
+            {
+                MessageBox.Show("Sorry, this morph cannot be exported: base mesh was not found.");
             }
         }
 
@@ -193,9 +200,12 @@ namespace MEMeshMorphExporter
                 {
                     Cursor.Current = Cursors.WaitCursor;
                     var exporter = new MEMeshMorphExporter.Exporters.MeshExporter(pccNode.pcc);
-                    exporter.ExportMorphsToFbx(fbd.SelectedPath);
+                    int morphNotExported = exporter.ExportMorphsToFbx(fbd.SelectedPath);
                     Cursor.Current = Cursors.Default;
-                    MessageBox.Show("Done.");
+                    if (morphNotExported == 0)
+                        MessageBox.Show("Done.");
+                    else
+                        MessageBox.Show("Done, but " + morphNotExported + " could not be exported because basemesh was not found.");
                 }
             }
         }

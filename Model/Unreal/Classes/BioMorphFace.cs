@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-
-//using Microsoft.DirectX;
+using System.Linq;
 
 using ME3Explorer.Packages;
 using ME3Explorer.Unreal;
@@ -90,12 +89,21 @@ namespace MEMeshMorphExporter.Unreal
                             {
                                 m_oBaseHead = new MESkeletalMesh(pcc, objIndex - 1);
                             }
+                            else if (pcc.isImport(-objIndex - 1))
+                            {
+                                // TODO look for pcc
+                                LookupObjectInImports(-objIndex - 1);
+                            }
                             break;
                         case "m_oHairMesh":
                             int objHairIndex = prop.Value.IntValue;
                             if (pcc.isExport(objHairIndex - 1))
                             {
                                 m_oHairMesh = new MESkeletalMesh(pcc, objHairIndex - 1);
+                            }
+                            else if (pcc.isImport(-objHairIndex - 1))
+                            {
+                                // TODO look for pcc
                             }
                             break;
                         case "m_nInternalMorphFaceContentVersion":
@@ -105,6 +113,10 @@ namespace MEMeshMorphExporter.Unreal
                             if (pcc.isExport(objMatOIndex - 1))
                             {
                                 m_oMaterialOverrides = new MaterialOverrides(pcc, objMatOIndex - 1);
+                            }
+                            else if (pcc.isImport(-objMatOIndex - 1))
+                            {
+                                // TODO look for pcc
                             }
                             break;
                         case "CurrentMorphFaceContentVersion":
@@ -119,6 +131,14 @@ namespace MEMeshMorphExporter.Unreal
                     }
                 }
                 ReadVertices(startVerticesIndex);
+            }
+        }
+
+        public bool IsExportable
+        {
+            get
+            {
+                return m_oBaseHead != null;
             }
         }
 
@@ -313,6 +333,22 @@ namespace MEMeshMorphExporter.Unreal
         {
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(this, Newtonsoft.Json.Formatting.Indented);
             File.WriteAllText(targetFile, json);
+        }
+
+        // TODO wip
+        private void LookupObjectInImports(int index) 
+        {
+            if (pcc.isImport(index))
+            {
+                var import = pcc.Imports[index];
+                string pccToLookFor = import.PackageFile;
+                var OkPackage = MEPackageHandler.packagesInTools.Where(p => p.FileName == pccToLookFor);
+                if (OkPackage.Count() > 0)
+                {
+                    IMEPackage nPcc = OkPackage.ElementAt(0);
+                }
+            }
+        
         }
     }
 

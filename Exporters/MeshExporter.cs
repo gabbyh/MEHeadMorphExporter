@@ -49,24 +49,31 @@ namespace MEMeshMorphExporter.Exporters
             }
         }
 
-        public void ExportMorphsToFbx(string targetDir)
+        public int ExportMorphsToFbx(string targetDir)
         {
+            int countMorphNotExported = 0;
             if (Pcc != null)
             {
                 var morphExpIndexes = Pcc.Exports.Select((value, index) => new { value, index })
                       .Where(z => z.value.ClassName == "BioMorphFace")
                       .Select(z => z.index);
 
+                
                 foreach (int morphIndex in morphExpIndexes)
                 {
                     IExportEntry morphExp = Pcc.Exports[morphIndex];
                     var morph = new MEMeshMorphExporter.Unreal.BioMorphFace(Pcc, morphIndex);
-
-                    string fileDest = System.IO.Path.Combine(targetDir, morph.Name + ".fbx");
-                    var expMesh = morph.Apply();
-                    ExportMeshWithMorph(morph, 0, fileDest);
+                    if (morph.IsExportable)
+                    {
+                        string fileDest = System.IO.Path.Combine(targetDir, morph.Name + ".fbx");
+                        var expMesh = morph.Apply();
+                        ExportMeshWithMorph(morph, 0, fileDest);
+                    }
+                    else
+                        countMorphNotExported++;
                 }
             }
+            return countMorphNotExported;
         }
 
         public void ExportMorphsToJson(string targetDir)
