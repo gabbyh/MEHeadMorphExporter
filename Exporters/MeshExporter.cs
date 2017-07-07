@@ -238,7 +238,7 @@ namespace MEMeshMorphExporter.Exporters
         private FBXNode CreateFbxBone(int boneIndex, List<MESkeletalMesh.BoneStruct> Skeleton, FBXScene pScene, FBXNode parent)
         {
             MESkeletalMesh.BoneStruct bone = Skeleton[boneIndex];
-            string boneName = Pcc.isName(bone.Name) ? Pcc.Names[bone.Name] : "bone_" + bone.Name;
+            string boneName = bone.BoneName;
             FBXSkeleton lSkeletonLimbNodeAttribute1 = FBXSkeleton.Create(pScene, boneName);
             lSkeletonLimbNodeAttribute1.SetSkeletonType(FBXWrapper.SkelType.eLimbNode);
             lSkeletonLimbNodeAttribute1.SetSize(1.0);
@@ -328,7 +328,7 @@ namespace MEMeshMorphExporter.Exporters
                             {
                                 int bone = vertex.InfluenceBones[x];
                                 bone = chunk.BoneMap[bone];
-                                string boneName = GetBoneName(bone, mesh);
+                                string boneName = mesh.Bones[bone].BoneName;
                                 VertexWeight vw;
                                 vw.vertexIndex = v;
                                 vw.weight = weight;
@@ -440,11 +440,6 @@ namespace MEMeshMorphExporter.Exporters
             return Result;
         }
 
-        string GetBoneName(int bone, MESkeletalMesh mesh)
-        {
-            return Pcc.isName(mesh.Bones[bone].Name) ? Pcc.Names[mesh.Bones[bone].Name] : "bone_" + mesh.Bones[bone].Name;              
-        }
-
         private List<int> GetSectionVertices(MESkeletalMesh mesh, int lod, int section)
         {
             var vertices = new HashSet<int>();
@@ -460,13 +455,13 @@ namespace MEMeshMorphExporter.Exporters
         {
             if (lod.Sections[s].MaterialIndex < mesh.Materials.Count)
             {
-                if (Pcc.isExport(mesh.Materials[lod.Sections[s].MaterialIndex] - 1)) 
+                if (mesh.Owner.isExport(mesh.Materials[lod.Sections[s].MaterialIndex] - 1)) 
                 {
-                    return Pcc.Exports[mesh.Materials[lod.Sections[s].MaterialIndex] - 1].ObjectName;
+                    return mesh.Owner.Exports[mesh.Materials[lod.Sections[s].MaterialIndex] - 1].ObjectName;
                 }
-                else if (Pcc.isImport(-mesh.Materials[lod.Sections[s].MaterialIndex] - 1)) 
+                else if (mesh.Owner.isImport(-mesh.Materials[lod.Sections[s].MaterialIndex] - 1)) 
                 {
-                    return Pcc.Imports[-mesh.Materials[lod.Sections[s].MaterialIndex] -1].ObjectName;
+                    return mesh.Owner.Imports[-mesh.Materials[lod.Sections[s].MaterialIndex] - 1].ObjectName;
                 }
                 else
                 {

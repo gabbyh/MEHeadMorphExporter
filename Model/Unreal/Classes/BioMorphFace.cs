@@ -25,14 +25,14 @@ namespace MEMeshMorphExporter.Unreal
         {
             get
             {
-                return m_oBaseHead != null && pcc.isExport(m_oBaseHead.MyIndex) ? pcc.Exports[m_oBaseHead.MyIndex].ObjectName : "";
+                return m_oBaseHead != null ? m_oBaseHead.Name : "";
             }
         }
         public string HairMeshName
         {
             get
             {
-                return m_oHairMesh != null && pcc.isExport(m_oHairMesh.MyIndex) ? pcc.Exports[m_oHairMesh.MyIndex].ObjectName : "";
+                return m_oHairMesh != null ? m_oHairMesh.Name : "";
             }
         }
         public MaterialOverrides MaterialsOverrides
@@ -91,8 +91,14 @@ namespace MEMeshMorphExporter.Unreal
                             }
                             else if (pcc.isImport(-objIndex - 1))
                             {
-                                // TODO look for pcc
-                                LookupObjectInImports(-objIndex - 1);
+                                // look for a package actually containing the object
+                                IMEPackage nPcc = null;
+                                int expIndex = -1;
+                                LookupObjectInImports(-objIndex - 1, out nPcc, out expIndex);
+                                if (nPcc != null && expIndex > -1)
+                                {
+                                    m_oBaseHead = new MESkeletalMesh(nPcc, expIndex);
+                                }
                             }
                             break;
                         case "m_oHairMesh":
@@ -103,7 +109,13 @@ namespace MEMeshMorphExporter.Unreal
                             }
                             else if (pcc.isImport(-objHairIndex - 1))
                             {
-                                // TODO look for pcc
+                                IMEPackage nPcc = null;
+                                int expIndex = -1;
+                                LookupObjectInImports(-objHairIndex - 1, out nPcc, out expIndex);
+                                if (nPcc != null && expIndex > -1)
+                                {
+                                    m_oHairMesh = new MESkeletalMesh(nPcc, expIndex);
+                                }
                             }
                             break;
                         case "m_nInternalMorphFaceContentVersion":
@@ -116,7 +128,13 @@ namespace MEMeshMorphExporter.Unreal
                             }
                             else if (pcc.isImport(-objMatOIndex - 1))
                             {
-                                // TODO look for pcc
+                                IMEPackage nPcc = null;
+                                int expIndex = -1;
+                                LookupObjectInImports(-objMatOIndex - 1, out nPcc, out expIndex);
+                                if (nPcc != null && expIndex > -1)
+                                {
+                                    m_oMaterialOverrides = new MaterialOverrides(nPcc, expIndex);
+                                }
                             }
                             break;
                         case "CurrentMorphFaceContentVersion":
@@ -335,20 +353,77 @@ namespace MEMeshMorphExporter.Unreal
             File.WriteAllText(targetFile, json);
         }
 
-        // TODO wip
-        private void LookupObjectInImports(int index) 
+        private void LookupObjectInImports(int impIndex, out IMEPackage newPcc, out int expIndex) 
         {
-            if (pcc.isImport(index))
+            newPcc = null;
+            expIndex = -1;
+
+            if (pcc.isImport(impIndex))
             {
-                var import = pcc.Imports[index];
-                string pccToLookFor = import.PackageFile;
-                var OkPackage = MEPackageHandler.packagesInTools.Where(p => p.FileName == pccToLookFor);
-                if (OkPackage.Count() > 0)
+                var import = pcc.Imports[impIndex];
+                string objectName = import.ObjectName;
+
+                // this is a very ugly fix: there is probably a way to find out which pcc contains the object
+                // but this is not the package referenced in import.PackageFile
+                // therefore, we will try the following mapping, 'deducted' by experience only.
+
+                string newPackageName = null;
+                // in ME1 case, we have a BIOG_...Morph package for every species, so we will work with that
+                if (pcc is ME1Package)
                 {
-                    IMEPackage nPcc = OkPackage.ElementAt(0);
+                    if (objectName.Contains("ASA"))
+                    {
+                        newPackageName = "BIOG_ASA_HED_PROMorph_R.upk";
+                    }
+                    else if (objectName.Contains("HMM"))
+                    {
+                        newPackageName = "BIOG_HMM_HED_PROMorph.upk";
+                    }
+                    else if (objectName.Contains("HMF"))
+                    {
+                        newPackageName = "BIOG_HMF_HED_PROMorph_R.upk";
+                    }
+                    else if (objectName.Contains("TUR"))
+                    {
+                        newPackageName = "BIOG_TUR_HED_PROMorph_R.upk";
+                    }
+                    else if (objectName.Contains("SAL"))
+                    {
+                        newPackageName = "BIOG_SAL_HED_PROMorph_R.upk";
+                    }
+                    else if (objectName.Contains("KRO"))
+                    {
+                        newPackageName = "BIOG_KRO_HED_PROMorph.upk";
+                    }
+                }
+                else if (pcc is ME2Package)
+                {
+                    // in ME2 case, we take a package containing the mesh for each species        
+                    if ((objectName.StartsWith("HMM") || objectName.StartsWith("HMF")))
+                    {
+                        // if human, we can try BIOG_MORPH_FACE.pcc
+                        newPackageName = "BIOG_MORPH_FACE.pcc";
+                    }
+                    else if (objectName.StartsWith("TUR") || objectName.StartsWith("ASA"))
+                    {
+                        newPackageName = "BioP_CitHub.pcc";
+                    }
+                    else if (objectName.StartsWith("KRO"))
+                    {
+                        newPackageName = "BioP_KroHub.pcc";
+                    }
+                    else if (objectName.StartsWith("SAL"))
+                    {
+                        newPackageName = "BioP_TwrHub.pcc";
+                    }
+                }
+                // no case reported for ME3 so we do nothing at this time.
+
+                if (newPackageName != null)
+                {
+                    Utils.GetObjectFromPcc(newPackageName, pcc, objectName, import.ClassName, out newPcc, out expIndex);
                 }
             }
-        
         }
     }
 

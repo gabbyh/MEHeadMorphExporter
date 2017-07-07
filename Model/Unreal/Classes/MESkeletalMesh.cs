@@ -40,6 +40,8 @@ namespace MEMeshMorphExporter.Unreal
             public int NumChildren;
             public int Parent;
             public int BoneColor;
+
+            public string BoneName;
         }
 
         public struct SectionStruct
@@ -761,6 +763,14 @@ namespace MEMeshMorphExporter.Unreal
             GenerateDXMeshes();
         }
 
+        public string Name
+        {
+            get
+            {
+                return Owner.Exports[MyIndex].ObjectName;
+            }
+        }
+
         public void Serialize(SerializingContainer Container)
         {
             SerializeBoundings(Container);
@@ -845,6 +855,8 @@ namespace MEMeshMorphExporter.Unreal
                 b.Parent = Container + b.Parent;
                 if (Owner is ME3Package)
                     b.BoneColor = Container + b.BoneColor;
+
+                b.BoneName = Owner.isName(b.Name) ? Owner.Names[b.Name] : "bone_" + b.Name;
                 Bones[i] = b;
             }
             SkeletonDepth = Container + SkeletonDepth;
